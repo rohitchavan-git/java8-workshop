@@ -15,7 +15,8 @@ public class Optionals {
 	}
 
 	public static String getDiscountLine(Customer customer) {
-		return "Discount: " + getApplicableDiscountPercentage(customer.getMemberCard()).getGlobalPercentage();
+		return "Discount: " + getApplicableDiscountPercentage(customer.getMemberCard())
+				.getGlobalPercentage();
 	}
 
 	private static Discount getApplicableDiscountPercentage(MemberCard card) {

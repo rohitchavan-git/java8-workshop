@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toMap;
 
 public class Trap_toMap_nullKey {
    @Data
@@ -19,7 +20,10 @@ public class Trap_toMap_nullKey {
    }
    private static void toMapWithNullValues() {
       List<Person> list = asList(new Person(1L, "John"), new Person(2L, null));
-      Map<Long, String> map = list.stream().collect(Collectors.toMap(Person::getId, Person::getName));
+      Map<Long, String> map = list.stream()
+              .filter(person -> person.getId()!=null)
+              .filter(person -> person.getName()!=null)
+              .collect(toMap(Person::getId, Person::getName));
       System.out.println(map);
    }
 }

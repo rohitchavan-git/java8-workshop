@@ -58,7 +58,7 @@ public class OptionalAdvancedApp implements CommandLineRunner {
 
    public static void excessOpt(DeliveryDto dto) {
       boolean duplicate = Optional.ofNullable(dto.recipientPerson)
-          .map(name -> existsByName(name))
+          .map(OptionalAdvancedApp::existsByName)
           .orElse(false);
       if (duplicate) {
          System.out.println("DUPLICATE person!");

@@ -1,5 +1,8 @@
 package victor.training.java.advanced;
 
+import java.util.Objects;
+import java.util.Optional;
+
 public class OptionalChain {
 	static MyMapper mapper = new MyMapper();
    public static void main(String[] args) {
@@ -14,24 +17,24 @@ public class OptionalChain {
 class MyMapper {
    public DeliveryDto convert(Parcel parcel) {
       DeliveryDto dto = new DeliveryDto();
-      // Game: how many NPE can you spot below ?
-      dto.recipientPerson = parcel.getDelivery().getAddress().getContactPerson().getName().toUpperCase();
+      dto.recipientPerson = getRecipientPerson(parcel);
       return dto;
    }
 
    public DeliveryDto pyramidOfNull(Parcel parcel) {
       DeliveryDto dto = new DeliveryDto();
-      if (
-          parcel!=null &&
-          parcel.getDelivery()!=null &&
-          parcel.getDelivery().getAddress()!=null &&
-          parcel.getDelivery().getAddress().getContactPerson()!=null &&
-          parcel.getDelivery().getAddress().getContactPerson().getName()!=null) { // null terror
-         dto.recipientPerson = parcel.getDelivery().getAddress().getContactPerson().getName().toUpperCase();
-      } else {
-         dto.recipientPerson = "<NOT SET>";
-      }
+      dto.recipientPerson = getRecipientPerson(parcel);
       return dto;
+   }
+
+   private static String getRecipientPerson(Parcel parcel) {
+      return Optional.ofNullable(parcel)
+              .flatMap(parcel1 -> Optional.ofNullable(parcel1.getDelivery()))
+              .flatMap(delivery -> Optional.ofNullable(delivery.getAddress()))
+              .flatMap(address -> Optional.ofNullable(address.getContactPerson()))
+              .map(ContactPerson::getName)
+              .map(String::toUpperCase)
+              .orElse("<NOT SET>");
    }
 
 
@@ -62,7 +65,8 @@ class Delivery {
    }
 
 	public void setAddress(Address address) {
-		this.address = address; // TODO null safe
+       Objects.requireNonNull(address);
+       this.address = address; // TODO null safe
 	}
 
 	public Address getAddress() {

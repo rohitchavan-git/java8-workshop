@@ -5,6 +5,7 @@ import victor.training.java.advanced.model.User;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class SplitLoopToStream {
@@ -22,8 +23,9 @@ public class SplitLoopToStream {
               .filter(user -> !user.getActive())
               .forEach(user -> insertInactiveAlert(user.getId()));
       int totalTickets = users.stream()
-              .mapToInt(User::getTicketsRaised)
-              .sum();
+              .map(User::getTicketsRaised)
+              .filter(Objects::nonNull)
+              .reduce(0,Integer::sum );
       double noLanguagePercent = 100d * missingLanguageCount / users.size();
       System.out.printf("No language set  = %.2f%%\n", noLanguagePercent);
       System.out.printf("Number of tickets = %d\n", totalTickets);
