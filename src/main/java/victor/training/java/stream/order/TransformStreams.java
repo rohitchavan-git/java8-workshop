@@ -1,22 +1,23 @@
 package victor.training.java.stream.order;
 
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toMap;
-
+import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedSet;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import org.aspectj.weaver.ast.Or;
 import victor.training.java.stream.order.dto.OrderDto;
 import victor.training.java.stream.order.entity.Customer;
 import victor.training.java.stream.order.entity.Order;
 import victor.training.java.stream.order.entity.OrderLine;
 import victor.training.java.stream.order.entity.Product;
 import victor.training.java.stream.order.entity.Order.PaymentMethod;
+
+import static java.util.Comparator.comparing;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.*;
 
 public class TransformStreams {
 
@@ -25,15 +26,11 @@ public class TransformStreams {
 	 * use .map
 	 */
 	public List<OrderDto> p01_toDtos(List<Order> orders) {
-		
-		List<OrderDto> dtos = new ArrayList<>();
-		for (Order order : orders) {
-			OrderDto dto = new OrderDto();
-			dto.totalPrice = order.getTotalPrice();
-			dto.creationDate = order.getCreationDate();
-			dtos.add(dto);
-		}
-		return dtos;
+
+		return orders.stream()
+				.map( order -> new OrderDto(order.getTotalPrice(),
+						order.getCreationDate()))
+				.collect(toList());
 		
 	}
 
@@ -41,15 +38,32 @@ public class TransformStreams {
 	 * Note: Order.getPaymentMethod()
 	 */
 	public Set<PaymentMethod> p02_getUsedPaymentMethods(Customer customer) {
-		return null; 
+
+		return Optional.ofNullable(customer)
+				.map(Customer::getOrders)
+				.stream()
+				.flatMap(List::stream)
+				.map(Order::getPaymentMethod)
+				.collect(toSet());
 	}
 	
 	/**
 	 * When did the customer created orders ?
 	 * Note: Order.getCreationDate()
 	 */
-	public SortedSet<LocalDate> p03_getOrderDatesAscending(Customer customer) {
-		return null; 
+	public List<LocalDate> p03_getOrderDatesAscending(Customer customer) {
+
+		Stream<Order> orderStream = Optional.ofNullable(customer)
+				.map(Customer::getOrders)
+				.stream()
+				.flatMap(List::stream);
+
+		List<LocalDate> localDates = orderStream
+				.map(Order::getCreationDate)
+				.sorted(comparing(identity()))
+				.distinct()
+				.toList();
+		return localDates;
 	}
 	
 	
@@ -57,14 +71,22 @@ public class TransformStreams {
 	 * @return a map order.id -> order
 	 */
 	public Map<Long, Order> p04_mapOrdersById(Customer customer) {
-		return null; 
+
+		return customer.getOrders().stream()
+				.collect(toMap(Order::getId, identity()));
 	}
 	
 	/** 
 	 * Orders grouped by Order.paymentMethod
 	 */
 	public Map<PaymentMethod, List<Order>> p05_getProductsByPaymentMethod(Customer customer) {
-		return null; 
+
+		Map<PaymentMethod, List<Order>> paymentMethodListMap = customer.getOrders()
+				.stream()
+				.collect(groupingBy(Order::getPaymentMethod,
+						toList()));
+
+		return paymentMethodListMap;
 	}
 	
 	// -------------- MOVIE BREAK :p --------------------
@@ -76,14 +98,21 @@ public class TransformStreams {
 	 * The sum of all counts for the same product.
 	 * i.e. SELECT PROD_ID, SUM(COUNT) FROM PROD GROUPING BY PROD_ID
 	 */
-	public Map<Product, Long> p06_getProductCount(Customer customer) {
-		
-		List<OrderLine> allLines = new ArrayList<>();
-		
-		for (Order order : customer.getOrders()) {
-			allLines.addAll(order.getOrderLines());
-		}
-		return null; 
+	public Map<Product, Integer> p06_getProductCount(Customer customer) {
+
+
+		Map<Product, List<OrderLine>> collect = customer.getOrders().stream()
+				.map(Order::getOrderLines)
+				.flatMap(Collection::stream)
+				.collect(groupingBy(OrderLine::getProduct));
+
+		Function<Map.Entry<Product, List<OrderLine>>, Integer> sumOfProductItem = value1 -> value1.getValue()
+				.stream().mapToInt(OrderLine::getCount)
+				.sum();
+
+		return collect.entrySet()
+				.stream()
+				.collect(toMap(Map.Entry::getKey, sumOfProductItem));
 		
 	}
 	
@@ -92,7 +121,18 @@ public class TransformStreams {
 	 * sorted by Product.name.
 	 */
 	public List<Product> p07_getAllOrderedProducts(Customer customer) {
-		return null; 
+
+		Stream<OrderLine> orderLineStream = customer.getOrders()
+				.stream()
+				.map(Order::getOrderLines)
+				.flatMap(List::stream);
+
+		List<Product> products = orderLineStream
+				.map(OrderLine::getProduct)
+				.sorted(comparing(Product::getName))
+				.distinct()
+				.toList();
+		return products;
 	}
 	
 	
@@ -103,7 +143,16 @@ public class TransformStreams {
 	 * Hint: Reuse the previous function.
 	 */
 	public String p08_getProductsJoined(Customer customer) {
-		return null; 
+
+		Stream<OrderLine> orderLineStream = customer.getOrders().stream()
+				.map(Order::getOrderLines)
+				.flatMap(List::stream);
+		return orderLineStream
+				.map(OrderLine::getProduct)
+				.map(Product::getName)
+				.sorted(comparing(identity()))
+				.distinct()
+				.collect(joining(","));
 	}
 	
 	/**
@@ -111,6 +160,10 @@ public class TransformStreams {
 	 */
 	public Long p09_getApproximateTotalOrdersPrice(Customer customer) {
 		// TODO +, longValue(), reduce()
-		return null;
+
+		return customer.getOrders()
+				.stream()
+				.map(order -> order.getTotalPrice().longValue())
+				.reduce(0L, Long::sum);
 	}
 }

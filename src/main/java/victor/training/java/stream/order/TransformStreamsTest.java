@@ -62,9 +62,9 @@ public class TransformStreamsTest {
 		Order order2 = new Order().setCreationDate(yesterday);
 		
 		List<LocalDate> expected = Arrays.asList(yesterday, today);
-		Collection<LocalDate> actual = service.p03_getOrderDatesAscending(new Customer(order1, order1bis, order2));
+		List<LocalDate> actual = service.p03_getOrderDatesAscending(new Customer(order1, order1bis, order2));
 		
-		assertEquals(expected, new ArrayList<>(actual));
+		assertEquals(expected, actual);
 	}
 	
 	@Test
@@ -99,10 +99,10 @@ public class TransformStreamsTest {
 				new OrderLine(table, 1),
 				new OrderLine(chair, 1));
 		
-		Map<Product, Long> actual = service.p06_getProductCount(new Customer(order1, order2));
-		Map<Product, Long> expected = new HashMap<Product, Long>(){{
-			put(chair, 4L);
-			put(table, 1L);
+		Map<Product, Integer> actual = service.p06_getProductCount(new Customer(order1, order2));
+		Map<Product, Integer> expected = new HashMap<Product, Integer>(){{
+			put(chair, 4);
+			put(table, 1);
 		}};
 		assertEquals(expected, actual);
 	}
