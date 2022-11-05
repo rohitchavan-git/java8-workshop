@@ -39,8 +39,19 @@ public class DishPlay {
               .limit(3)
               .toList();
 
+      System.out.println(top3HighCalorieItem);
+
+
       // TODO find out the 2nd and 3rd most caloric items
 
+
+      List<Dish> top2and3CaloricItems = menu.stream()
+              .sorted(comparing(Dish::getCalories).reversed())
+              .skip(1)
+              .limit(2)
+              .collect(toList());
+
+      System.out.println(top2and3CaloricItems);
 
       // TODO find vegetarian dishes
 
@@ -78,17 +89,26 @@ public class DishPlay {
       Map<Type, List<Dish>> collect = menu.stream()
               .collect(groupingBy(Dish::getType));
 
+      Function<Map.Entry<Type, List<Dish>>, Integer> getSumOfCalories =
+              mapVal1 -> mapVal1.getValue()
+              .stream()
+              .mapToInt(Dish::getCalories)
+              .sum();
       Map<Type, Integer> totalCaloriesByType = collect.entrySet()
               .stream()
-              .collect(toMap(Map.Entry::getKey, mapVal -> mapVal.getValue()
-                      .stream()
-                      .mapToInt(Dish::getCalories)
-                      .sum()));
+              .collect(toMap(Map.Entry::getKey, getSumOfCalories));
 
 
 
       // TODO Map<Dish.Type, Optional<Dish>> mostCaloricByType
 
+
+      Map<Type, Optional<Dish>> mostCaloricByType = collect.entrySet()
+              .stream()
+              .collect(toMap(Map.Entry::getKey,
+                      typeListEntry -> typeListEntry.getValue()
+                              .stream()
+                              .max(comparing(Dish::getCalories))));
 
 
    }

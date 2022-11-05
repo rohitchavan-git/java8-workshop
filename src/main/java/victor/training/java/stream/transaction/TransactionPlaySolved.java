@@ -15,10 +15,6 @@ import java.util.stream.Stream;
 
 
 public class TransactionPlaySolved {
-	
-	
-
-
 
 	private Trader raoul = new Trader("Raoul", "Cambridge");
 	private Trader mario = new Trader("Mario","Milan");
