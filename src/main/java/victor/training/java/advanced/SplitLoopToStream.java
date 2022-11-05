@@ -26,6 +26,7 @@ public class SplitLoopToStream {
               .map(User::getTicketsRaised)
               .filter(Objects::nonNull)
               .reduce(0,Integer::sum );
+
       double noLanguagePercent = 100d * missingLanguageCount / users.size();
       System.out.printf("No language set  = %.2f%%\n", noLanguagePercent);
       System.out.printf("Number of tickets = %d\n", totalTickets);

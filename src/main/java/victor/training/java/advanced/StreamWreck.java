@@ -7,25 +7,32 @@ import victor.training.java.advanced.repo.ProductRepo;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Predicate;
 
+import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.*;
 
 public class StreamWreck {
    private ProductRepo productRepo;
 
    public List<Product> getFrequentOrderedProducts(List<Order> orders) {
-      return orders.stream()
-          .filter(o -> o.getCreationDate().isAfter(LocalDate.now().minusYears(1)))
-          .flatMap(o -> o.getOrderLines().stream())
-          .collect(groupingBy(OrderLine::getProduct, summingInt(OrderLine::getItemCount)))
-          .entrySet()
-          .stream()
-          .filter(e -> e.getValue() >= 10)
-          .map(Entry::getKey)
-          .filter(p -> !p.isDeleted())
-          .filter(p -> !productRepo.findByHiddenTrue().contains(p))
-          .collect(toList());
+
+      Map<Product, Integer> productBySumming = orders.stream()
+              .filter(o -> o.getCreationDate().isAfter(LocalDate.now().minusYears(1)))
+              .flatMap(o -> o.getOrderLines().stream())
+              .collect(groupingBy(OrderLine::getProduct, summingInt(OrderLine::getItemCount)));
+
+      List<Product> hiddenProduct = productRepo.findByHiddenTrue();
+
+      return productBySumming.entrySet()
+                     .stream()
+                     .filter(e -> e.getValue() >= 10)
+                     .map(Entry::getKey)
+                     .filter(not(Product::isDeleted))
+                     .filter(not(hiddenProduct::contains))
+                     .collect(toList());
    }
 }
 
